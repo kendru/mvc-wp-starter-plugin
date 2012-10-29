@@ -48,11 +48,10 @@ class AppRegistry implements Registry
 				$option = array();
 			}
 
-			add_option($this->getOptionName(), $this->reg, '', 'no');
+			add_option($this->getOptionName(), $option, '', 'no');
 		}
 
 		$this->reg = $option;
-		$this->save();
 		$this->conflictMode = self::CONFLICT_OVERWRITE;
 	}
 

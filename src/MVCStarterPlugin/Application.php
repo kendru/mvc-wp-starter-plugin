@@ -26,14 +26,22 @@ class Application
 	private $register_session;
 	private $register_app;
 	private $register_request;
+	private $wp_wrapper;
 
-	public function __construct()
+	public function __construct($wp_wrapper = null)
 	{
-		if (!function_exists('add_action')) {
-			throw new Exception("Wordpress envorinment not loaded");
+		if (!$wp_wrapper
+			&& !function_exists('add_action')) {
+			throw new \Exception("Neither WordPress nor envorinment loaded");
 		}
 
-		add_action('init', array($this, 'init'));
+		if ($wp_wrapper) {
+			$wp_wrapper->add_action('init', array($this, 'init'));
+			$wp_wrapper->add_action('template_redirect', array($this, 'doRouting'));
+		} else {
+			add_action('init', array($this, 'init'));
+			add_action('template_redirect', array($this, 'doRouting'));
+		}
 	}
 
 	public function init()
@@ -45,14 +53,15 @@ class Application
 	}
 
 	public function doRouting() {
-		$param_name = preg_replace('/[^a-zA-Z0-9]/', '', $this->register_app->get('name')) . '_cmd';
-		if (!isset($_REQUEST[$param_name])) {
-			return;
+		$this->router = new Router($this);
+		if ($this->router->canResolve()) {
+			$this->router->getCommand()->execute();
 		}
+	}
 
-		$this->router = new Router($_REQUEST[]);
-		$command = $this->router->getCommand();
-		$command->execute();
+	public function getName()
+	{
+		return strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $this->register_app->get('name')));
 	}
 
 // BEGIN Application path settings {{{
