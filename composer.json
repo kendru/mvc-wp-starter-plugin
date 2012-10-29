@@ -1,0 +1,14 @@
+{
+	"name": "kendru/mvc-wp-starter-plugin",
+    "require": {
+        "monolog/monolog": "1.0.*",
+        "twig/twig": "1.*",
+        "symfony/yaml": "v2.1.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    },
+    "autoload": {
+        "psr-0": {"MVCStarterPlugin": "src/"}
+    }
+}

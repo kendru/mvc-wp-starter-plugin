@@ -1,0 +1,25 @@
+<div id="main-wrapper">
+
+	<header id="page-header">
+	
+		<h1>{% if title %}{{ title }}{% else %}{{ app.title }}{% endif %}</h1>
+		<nav id="top-nav" role="navigation">
+			<ul>
+	
+				<li><a href="/">Home</a></li>
+			</ul>
+		</nav>
+	</header> <!-- END #page-header -->
+
+	<div id="content" role="main">
+		
+		<h2>Welcome to {% if title %}{{ title }}{% else %}{{ app.title }}{% endif %}</h2>
+		<p id="intro"></p>
+	</div> <!-- END #content -->
+
+	<footer id="page-footer">
+
+		<p id="attribution">Copyright (c) {{ "now"|date("Y") }} {% if title %}{{ title }}{% else %}{{ app.title }}{% endif %}.</p>
+	</footer>
+
+</div> <!-- END #main-wrapper -->
