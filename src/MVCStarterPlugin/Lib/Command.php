@@ -26,14 +26,15 @@ class Command
 		}
 
 		$classname = '\\MVCStarterPlugin\\Controllers\\' . $this->controller;
-		$method = $this->action;
+		$action = $this->action;
 
 		if (!class_exists($classname)) {
 			throw new \DomainException('Controller, "' . $this->controller . '", not found');
 		}
 
 		$instance = new $classname();
-		$instance->$method;
+		$instance->$action();
+		exit(0);
 	}
 
 	private function toClassName($name)

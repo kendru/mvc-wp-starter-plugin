@@ -26,39 +26,27 @@ class AppRegistry implements Registry
 	private $reg;
 	/** @type bool dirty flag, used to determine if registry has been changed */
 	private $is_dirty = false;
-	/** @type \MVCStarterPlugin\Application $app reference to the parent application */
-	private $app;
 
-	private function __construct($application)
+	private function __construct($wp_wrapper = null)
 	{
-		if (!function_exists('get_option')) {
-			throw new \Exception("WordPress environment has not been loaded");
+		if (!$wp_wrapper) {
+			$wp_wrapper = new WPWrapper();
 		}
 
-		$this->app = $application;
-
-		$option = get_option($this->getOptionName(), array());
-		
-		// Populate registry from config file on first run
-		if (empty($option)) {
-			try {
-				\Symfony\Component\Yaml\Yaml::enablePhpParsing();
-				$option = \Symfony\Component\Yaml\Yaml::parse(file_get_contents($this->app->getConfigDir() . 'app.yaml'));	
-			} catch (\Symfony\Component\Yaml\Exception\ParseException $e) {
-				$option = array();
-			}
-
-			add_option($this->getOptionName(), $option, '', 'no');
+		if (!function_exists('get_option')
+			&& !$wp_wrapper
+			) {
+			throw new \Exception("Neither WordPress nor environment loaded");
 		}
 
-		$this->reg = $option;
+		$this->reg = $wp_wrapper->get_option($this->getOptionName(), array());
 		$this->conflictMode = self::CONFLICT_OVERWRITE;
 	}
 
-	public static function instance($application)
+	public static function instance($wp_wrapper = null)
 	{
 		return empty(self::$instance)
-			? (self::$instance = new self($application))
+			? (self::$instance = new self($wp_wrapper))
 			: self::$instance;
 	}
 
@@ -116,6 +104,25 @@ class AppRegistry implements Registry
 			default:
 				throw new \Exception("Invalid conflict mode provided");
 				break;
+		}
+	}
+
+	/**
+	 * Populate the option initially from a config file
+	 * 
+	 * @param string $config_file the filesystem location of the config file (YAML format)
+	 * @return array the new options array
+	 */
+	public function initialize($config_dir) {
+		if (empty($this->reg)) {
+			try {
+				\Symfony\Component\Yaml\Yaml::enablePhpParsing();
+				$option = \Symfony\Component\Yaml\Yaml::parse(file_get_contents($config_dir));	
+			} catch (\Symfony\Component\Yaml\Exception\ParseException $e) {
+				$option = array();
+			}
+
+			add_option($this->getOptionName(), $option, '', 'no');
 		}
 	}
 

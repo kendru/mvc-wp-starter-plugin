@@ -7,7 +7,7 @@ use MVCStarterPlugin\Application;
 
 class RouterTest extends PHPUnit_Framework_TestCase
 {
-    public function testDoesNothingByDefault()
+    public function testHasDefaultRoute()
     {
         $app = $this->getMockBuilder('MVCStarterPlugin\Application')
 					->disableOriginalConstructor()
@@ -15,27 +15,69 @@ class RouterTest extends PHPUnit_Framework_TestCase
 		$app->expects($this->any())
 			->method('getName')
          	->will($this->returnValue('test_application'));
-        $router = new Router($app);
-        $this->assertEquals(false, $router->canResolve());
+
+        $wp = $this->getMockBuilder('MVCStarterPlugin\Lib\WPWrapper')
+                   ->setMethods(array('get_query_var', 'get_option'))
+                   ->getMock();
+        
+        $query_vars = array(
+            array('test_application', ''),
+            array('ctrl', ''),
+            array('cmd', ''),
+        );
+
+        $wp->expects($this->any())
+           ->method('get_query_var')
+           ->will($this->returnValueMap($query_vars));
+
+        $wp->expects($this->any())
+           ->method('get_option')
+           ->will($this->returnValue(array(
+                'name' => "Test Application",
+                'default_controller' => 'entities',
+                'default_command' => 'show'
+            )));
+
+        $router = new Router($app, $wp);
+        $cmd = $router->getCommand();
+        $this->assertEquals('Entities', $cmd->getController());
+        $this->assertEquals('show', $cmd->getAction());
     }
 
     public function testCreatesCommandIfQueryCommandGiven()
-    {        
-        $_REQUEST['test_application_ctl'] = "controller";
-        $_REQUEST['test_application_cmd'] = "action";
+    {   
+        $app = $this->getMockBuilder('MVCStarterPlugin\Application')
+                    ->disableOriginalConstructor()
+                    ->getMock();
+        $app->expects($this->any())
+            ->method('getName')
+            ->will($this->returnValue('test_application'));
 
-		$app = $this->getMockBuilder('MVCStarterPlugin\Application')
-					->disableOriginalConstructor()
-					->getMock();
-		$app->expects($this->any())
-			->method('getName')
-         	->will($this->returnValue('test_application'));
+        $wp = $this->getMockBuilder('MVCStarterPlugin\Lib\WPWrapper')
+                   ->setMethods(array('get_query_var', 'get_option'))
+                   ->getMock();
+        
+        $query_vars = array(
+            array('test_application', 'true'),
+            array('ctrl', 'another_controller'),
+            array('cmd', 'the_action'),
+        );
 
-        $router = new Router($app);
-        $this->assertEquals(true, $router->canResolve());
-        $this->assertInstanceOf('MVCStarterPlugin\Lib\Command', $router->getCommand());
+        $wp->expects($this->any())
+           ->method('get_query_var')
+           ->will($this->returnValueMap($query_vars));
 
-        $_REQUEST['test_application_ctl'] = null;
-        $_REQUEST['test_application_cmd'] = null;
+        $wp->expects($this->any())
+           ->method('get_option')
+           ->will($this->returnValue(array(
+                'name' => "Test Application",
+                'default_controller' => 'entities',
+                'default_command' => 'show'
+            )));
+
+        $router = new Router($app, $wp);
+        $cmd = $router->getCommand();
+        $this->assertEquals('AnotherController', $cmd->getController());
+        $this->assertEquals('theAction', $cmd->getAction());
     }
 }

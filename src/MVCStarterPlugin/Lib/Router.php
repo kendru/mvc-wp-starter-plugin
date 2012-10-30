@@ -13,17 +13,43 @@ namespace MVCStarterPlugin\Lib;
  */
 class Router
 {
-	private $can_resolve;
+	private $can_resolve = false;
 	private $command;
 
-	public function __construct($application)
+	public function __construct($application, $wp_wrapper = null)
 	{
+
 		$handle = $application->getName();
-		if (isset($_REQUEST[$handle . "_ctl"])
-			&& isset($_REQUEST[$handle . "_cmd"])) {
+		
+		if (!$wp_wrapper) {
+			$wp_wrapper = new WPWrapper();
+		}
+
+		$handle_var = $wp_wrapper->get_query_var($handle);
+		$ctrl = $wp_wrapper->get_query_var('ctrl');
+		$cmd = $wp_wrapper->get_query_var('cmd');
+
+		$app_reg = AppRegistry::instance($wp_wrapper);
+
+		// If WP query variables present
+		if ($handle_var
+			&& $handle_var === "true"
+			&& $ctrl
+			&& $cmd
+			) {
+			
 			$this->can_resolve = true;
-			$this->command = new Command($_REQUEST[$handle . "_ctl"], $_REQUEST[$handle . "_cmd"]);
+			$this->command = new Command($ctrl, $cmd);
+		// If default values are set (usually from first landing on the admin page)
+		} elseif ($app_reg->get('default_controller')) {
+
+			$ctrl = $app_reg->get('default_controller');
+			$cmd = $app_reg->get('default_command');
+			$this->can_resolve = true;
+			$this->command = new Command($ctrl, $cmd);
+		// Otherwise...
 		} else {
+
 			$this->command = new Command();
 		}
 	}

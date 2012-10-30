@@ -32,24 +32,32 @@ class Application
 	{
 		if (!$wp_wrapper
 			&& !function_exists('add_action')) {
-			throw new \Exception("Neither WordPress nor envorinment loaded");
+			throw new \Exception("Neither WordPress nor test envorinment loaded");
 		}
 
 		if ($wp_wrapper) {
-			$wp_wrapper->add_action('init', array($this, 'init'));
+			$wp_wrapper->add_action('init', array($this, 'init'), 10);
+			$wp_wrapper->add_action('init', array($this, 'configureRewriting'), 20);
+			$wp_wrapper->add_action('query_vars', array($this, 'addQueryVars'));
 			$wp_wrapper->add_action('template_redirect', array($this, 'doRouting'));
+			$wp_wrapper->add_action('admin_menu', array($this, 'createAdminInterface'));
 		} else {
-			add_action('init', array($this, 'init'));
+			add_action('init', array($this, 'init'), 10);
+			add_action('init', array($this, 'configureRewriting'), 20);
+			add_action('query_vars', array($this, 'addQueryVars'));
 			add_action('template_redirect', array($this, 'doRouting'));
+			add_action('admin_menu', array($this, 'createAdminInterface'));
 		}
 	}
 
 	public function init()
 	{
 		// Register routers
-		$this->register_app 	= AppRegistry::instance($this); // Application registry needs access to application config settings
+		$this->register_app 	= AppRegistry::instance(); // Application registry needs access to application config settings
 		$this->register_session = SessionRegistry::instance();
 		$this->register_request = RequestRegistry::instance();
+
+		$this->register_app->initialize($this->getConfigDir() . 'app.yaml');
 	}
 
 	public function doRouting() {
@@ -57,6 +65,32 @@ class Application
 		if ($this->router->canResolve()) {
 			$this->router->getCommand()->execute();
 		}
+	}
+
+	public function configureRewriting()
+	{
+		$basename = $this->getName();
+		add_rewrite_rule("^$basename/([^/]*)/([^/]*)/?", 'index.php?' . $basename . '=true&ctrl=$matches[1]&cmd=$matches[2]', 'top');
+	}
+
+	public function addQueryVars($vars)
+	{
+		$basename = $this->getName();
+		$vars[] = $basename;
+		$vars[] = 'ctrl';
+		$vars[] = 'cmd';
+		return $vars;
+	}
+
+	public function createAdminInterface()
+	{
+		add_menu_page($this->register_app->get('name'),
+					  $this->register_app->get('name'),
+					  'manage_options',
+					  __FILE__,
+					  array($this, 'doRouting'),
+					  dirname(dirname(plugin_dir_url(__FILE__))) . '/public/img/menu_icon.png',
+					  $position = 10);
 	}
 
 	public function getName()

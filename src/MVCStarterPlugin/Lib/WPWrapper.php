@@ -20,10 +20,10 @@ namespace MVCStarterPlugin\Lib;
 class WPWrapper
 {
 	public function __call($function, $args) {
-		call_user_func_array($function, $args);
+		return call_user_func_array($function, $args);
 	}
 
 	public static function __callStatic($function, $args) {
-		call_user_func_array($function, $args);
-	}	
+		return call_user_func_array($function, $args);
+	}
 }
