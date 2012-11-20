@@ -6,15 +6,20 @@ use \MVCStarterPlugin\Lib\Common\Controller;
 
 class Entities extends Controller
 {
-	public function front_show()
+	public function __construct()
 	{
-		get_header();
-		echo "Hooray! We made it to the front!";
-		get_footer();
+		parent::__construct();
+		$this->useLayout('front');
 	}
-	public function admin_show()
+
+	public function front_index()
 	{
-		echo "Hooray! We made it to the admin!";
-		exit(1);
+		$this->render(array('greeting' => "Hello, user!"));
+	}
+	public function admin_index()
+	{
+		$user = $this->requireAuthentication();
+		$this->useLayout('admin');
+		$this->render(array('user' => $user));
 	}
 }

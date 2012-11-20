@@ -1,28 +1,26 @@
-{{ wp.header }}
+{{ wp.get_header }}
 <div id="main-wrapper">
 
 	<header id="page-header">
-	
-		<h1>{% if title %}{{ title }}{% else %}{{ app.title }}{% endif %}</h1>
-		<nav id="top-nav" role="navigation">
-	
-			<ul>
-	
-				<li><a href="/">Home</a></li>
-			</ul>
-		</nav>
+		<h1>{% if title %}{{ title }}{% else %}{{ app.get('name') }}{% endif %}</h1>
 	</header> <!-- END #page-header -->
 
-	<div id="content" role="main">
-		
-		<h2>Welcome to {% if title %}{{ title }}{% else %}{{ app.title }}{% endif %}</h2>
-		<p id="intro"></p>
+	<div id="content">
+		<p id="intro">This is the default page for the MVC Starter Plugin. Feel free to start hacking away!</p>
+		<div class="yield">{{ yield }}</div>
 	</div> <!-- END #content -->
 
 	<footer id="page-footer">
-
-		<p id="attribution">Copyright (c) {{ "now"|date("Y") }} {% if title %}{{ title }}{% else %}{{ app.title }}{% endif %}.</p>
+		{% if flash %}
+		<div class="errors">
+			<h3>Errors:</h3>
+			{% for error in flash.error %}
+			<p>{{ error }}</p>
+			{% endfor %}
+		</div>
+		{% endif %}
+		<p>In case you were wondering, today is {{ "now"|date("M jS, Y") }}</p>
 	</footer>
 
 </div> <!-- END #main-wrapper -->
-{{ wp.footer }}
+{{ wp.get_footer }}

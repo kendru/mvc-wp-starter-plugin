@@ -40,8 +40,11 @@ class Router
 			
 			$this->can_resolve = true;
 			$this->command = new Command($ctrl, $cmd);
-		// If default values are set (usually from first landing on the admin page)
-		} elseif ($app_reg->get('default_controller')) {
+		} elseif ($wp_wrapper->is_admin()
+				  && $app_reg->get('default_controller')
+				  && isset($_GET['page'])
+				  && $_GET['page'] === $handle
+				  ) {
 
 			$ctrl = $app_reg->get('default_controller');
 			$cmd = $app_reg->get('default_command');
@@ -49,7 +52,6 @@ class Router
 			$this->command = new Command($ctrl, $cmd);
 		// Otherwise...
 		} else {
-
 			$this->command = new Command();
 		}
 	}

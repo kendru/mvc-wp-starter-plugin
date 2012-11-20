@@ -13,13 +13,22 @@
 
 	<div id="content" role="main">
 		
-		<h2>Welcome to {% if title %}{{ title }}{% else %}{{ app.title }}{% endif %}</h2>
-		<p id="intro"></p>
+		<h2>Welcome to the admin page</h2>
+		<div id="content">
+			{{ yield }}
+		</div>
 	</div> <!-- END #content -->
 
 	<footer id="page-footer">
-
-		<p id="attribution">Copyright (c) {{ "now"|date("Y") }} {% if title %}{{ title }}{% else %}{{ app.title }}{% endif %}.</p>
+		{% if flash.error %}
+		<div class="errors">
+			<h3>Errors:</h3>
+			{% for error in flash.error %}
+			<p>{{ error }}</p>
+			{% endfor %}
+		</div>
+		{% endif %}
+		<p id="attribution">Copyright (c) {{ "now"|date("Y") }} {% if wp.get_bloginfo('name') %}{{ wp.get_bloginfo('name') }}{% else %}{{ app.title }}{% endif %}.</p>
 	</footer>
 
 </div> <!-- END #main-wrapper -->

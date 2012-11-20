@@ -26,4 +26,13 @@ class WPWrapper
 	public static function __callStatic($function, $args) {
 		return call_user_func_array($function, $args);
 	}
+
+	// Turn properties into function calls - this allows more elegant calling
+	// of functions that take no parameters from Twig templates
+	public function __get($property)
+	{
+		if (function_exists($property)) {
+			return call_user_func($property);
+		}
+	}
 }

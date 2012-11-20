@@ -22,6 +22,8 @@ class Application
 	private $config_dir;
 	private $public_dir;
 	private $cache_dir;
+	private $template_dir;
+	private $uploads_dir;
 	private $router;
 	private $register_session;
 	private $register_app;
@@ -30,34 +32,54 @@ class Application
 
 	public function __construct($wp_wrapper = null)
 	{
-		if (!$wp_wrapper
-			&& !function_exists('add_action')) {
-			throw new \Exception("Neither WordPress nor test envorinment loaded");
+		if (!$wp_wrapper) {
+			$wp_wrapper = new Lib\WPWrapper();
+		}
+		$this->wp_wrapper = $wp_wrapper;
+
+		// Register routers
+		$this->register_app 	= AppRegistry::instance();
+		$this->register_session = SessionRegistry::instance();
+		$this->register_request = RequestRegistry::instance();
+
+		$wp_wrapper->register_activation_hook(dirname(dirname(__DIR__)) . '/plugin.php', array($this, 'installPlugin'));
+		$wp_wrapper->add_action('init', array($this, 'init'), 10);
+		$wp_wrapper->add_action('init', array($this, 'configureRewriting'), 20);
+		$wp_wrapper->add_action('query_vars', array($this, 'addQueryVars'));
+		$wp_wrapper->add_action('template_redirect', array($this, 'doRouting'));
+		$wp_wrapper->add_action('admin_menu', array($this, 'createAdminInterface'));
+	}
+
+	public function installPlugin()
+	{
+		$this->register_app->initialize($this->getConfigDir() . 'app.yaml', true);
+		if ($this->root_dir) {
+			$this->register_app->set('root_dir', $this->root_dir);
+		}
+		if ($this->config_dir) {
+			$this->register_app->set('config_dir', $this->config_dir);
+		}
+		if ($this->cache_dir) {
+			$this->register_app->set('cache_dir', $this->cache_dir);
+		}
+		if ($this->public_dir) {
+			$this->register_app->set('public_dir', $this->public_dir);
+		}
+		if ($this->template_dir) {
+			$this->register_app->set('template_dir', $this->template_dir);
+		}
+		if ($this->uploads_dir) {
+			$this->register_app->set('uploads_dir', $this->uploads_dir);
 		}
 
-		if ($wp_wrapper) {
-			$wp_wrapper->add_action('init', array($this, 'init'), 10);
-			$wp_wrapper->add_action('init', array($this, 'configureRewriting'), 20);
-			$wp_wrapper->add_action('query_vars', array($this, 'addQueryVars'));
-			$wp_wrapper->add_action('template_redirect', array($this, 'doRouting'));
-			$wp_wrapper->add_action('admin_menu', array($this, 'createAdminInterface'));
-		} else {
-			add_action('init', array($this, 'init'), 10);
-			add_action('init', array($this, 'configureRewriting'), 20);
-			add_action('query_vars', array($this, 'addQueryVars'));
-			add_action('template_redirect', array($this, 'doRouting'));
-			add_action('admin_menu', array($this, 'createAdminInterface'));
-		}
+		$this->register_app->save();
 	}
 
 	public function init()
 	{
-		// Register routers
-		$this->register_app 	= AppRegistry::instance(); // Application registry needs access to application config settings
-		$this->register_session = SessionRegistry::instance();
-		$this->register_request = RequestRegistry::instance();
-
-		$this->register_app->initialize($this->getConfigDir() . 'app.yaml');
+		if ($this->wp_wrapper->is_user_logged_in()) {
+			$this->register_session->setLoggedInUser($this->wp_wrapper->wp_get_current_user());
+		}
 	}
 
 	public function doRouting() {
@@ -87,7 +109,7 @@ class Application
 		add_menu_page($this->register_app->get('name'),
 					  $this->register_app->get('name'),
 					  'manage_options',
-					  __FILE__,
+					  $this->getName(),
 					  array($this, 'doRouting'),
 					  dirname(dirname(plugin_dir_url(__FILE__))) . '/public/img/menu_icon.png',
 					  $position = 10);
@@ -138,5 +160,26 @@ class Application
 	{
 		$this->cache_dir = $cache_dir;
 	}
+
+	public function getTemplateDir()
+	{
+		return $this->template_dir;
+	}
+
+	public function setTemplateDir($template_dir)
+	{
+		$this->template_dir = $template_dir;
+	}
+
+	public function getUploadsDir()
+	{
+		return $this->uploads_dir;
+	}
+
+	public function setUploadsDir($uploads_dir)
+	{
+		$this->uploads_dir = $uploads_dir;
+	}
 // END Application path settings }}}
+
 }

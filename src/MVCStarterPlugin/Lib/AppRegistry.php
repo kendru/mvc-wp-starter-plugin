@@ -26,18 +26,15 @@ class AppRegistry implements Registry
 	private $reg;
 	/** @type bool dirty flag, used to determine if registry has been changed */
 	private $is_dirty = false;
+	/** @type MVCStarterPlugin\Lib\WPWrapper WordPress wrapper class */
+	private $wp_wrapper;
 
 	private function __construct($wp_wrapper = null)
 	{
 		if (!$wp_wrapper) {
 			$wp_wrapper = new WPWrapper();
 		}
-
-		if (!function_exists('get_option')
-			&& !$wp_wrapper
-			) {
-			throw new \Exception("Neither WordPress nor environment loaded");
-		}
+		$this->wp_wrapper = $wp_wrapper;
 
 		$this->reg = $wp_wrapper->get_option($this->getOptionName(), array());
 		$this->conflictMode = self::CONFLICT_OVERWRITE;
@@ -87,7 +84,8 @@ class AppRegistry implements Registry
 	public function save()
 	{
 		if ($this->is_dirty) {
-			update_option($this->getOptionName(), $this->reg);
+
+			$this->wp_wrapper->update_option($this->getOptionName(), $this->reg);
 		}
 	}
 
@@ -113,17 +111,30 @@ class AppRegistry implements Registry
 	 * @param string $config_file the filesystem location of the config file (YAML format)
 	 * @return array the new options array
 	 */
-	public function initialize($config_dir) {
-		if (empty($this->reg)) {
+	public function initialize($config_file, $force_reload = false) {
+		if (empty($this->reg) || $force_reload) {
 			try {
 				\Symfony\Component\Yaml\Yaml::enablePhpParsing();
-				$option = \Symfony\Component\Yaml\Yaml::parse(file_get_contents($config_dir));	
+				$option = \Symfony\Component\Yaml\Yaml::parse(file_get_contents($config_file));
 			} catch (\Symfony\Component\Yaml\Exception\ParseException $e) {
 				$option = array();
 			}
 
-			add_option($this->getOptionName(), $option, '', 'no');
+			$this->reg = $option;
+			$this->wp_wrapper->add_option($this->getOptionName(), $option, '', 'no');
 		}
+
+		return $this->reg;
+	}
+
+	public function __get($key)
+	{
+		$this->get($key);
+	}
+
+	public function __set($key, $value)
+	{
+		$this->set($key, $value);
 	}
 
 	private function getOptionName()

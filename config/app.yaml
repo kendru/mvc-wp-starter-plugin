@@ -1,3 +1,8 @@
 name: "MVC Starter Plugin"
 default_controller: "entities"
-default_command: "show"
+default_command: "index"
+# root_dir: "/path/to/root/" # not sure if this is used/necessary
+# config_dir: "/path/to/config/"
+# template_dir: "/path/to/templates/"
+# cache_dir: "/path/to/cache/"
+# uploads_dir: "/path/to/uploads/"

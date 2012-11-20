@@ -62,6 +62,16 @@ class SessionRegistry implements Registry
 		return $value;
 	}
 
+	public function getLoggedInUser()
+	{
+		return $this->get('logged_in_user');
+	}
+
+	public function setLoggedInUser($username)
+	{
+		return $this->set('logged_in_user', $username);
+	}
+
 	public function setConflictMode($mode)
 	{
 		switch ($mode) {

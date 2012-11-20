@@ -33,16 +33,19 @@ class Command
 		}
 
 		$instance = new $classname();
-		$instance->$action();
-		exit(0);
+		if ($instance->$action() !== 'admin') {
+			exit(0);
+		}
 	}
 
+	// This method could most likely be replaced by a call to Inflector::classify()
 	private function toClassName($name)
 	{
 		$words = ucwords(preg_replace('/([^a-zA-Z0-9])/', ' ', $name));
 		return str_replace(' ', '', $words);
 	}
 
+	// This method could most likely be replaced by a call to Inflector::camelCase()
 	private function toMethodName($name)
 	{
 		$words = explode(' ', strtolower(preg_replace('/([^a-zA-Z0-9])/', ' ', $name)));
