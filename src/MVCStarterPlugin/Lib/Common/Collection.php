@@ -7,6 +7,7 @@
 namespace MVCStarterPlugin\Lib\Common;
 
 use MVCStarterPlugin\Lib\Util\Inflector;
+use MVCStarterPlugin\Lib\Exceptions\ResultOverflowException;
 
 /**
  * Provides unified access to a collection of Model objects
@@ -21,6 +22,9 @@ use MVCStarterPlugin\Lib\Util\Inflector;
  */
 class Collection implements \ArrayAccess, \Countable, \Iterator
 {
+	/** @type WPDB $wpdb the global WordPress database object */
+	private $wpdb;
+
 	/** @type CollectionBuilder $builder the builder object to use */
 	protected $filter;
 
@@ -41,6 +45,9 @@ class Collection implements \ArrayAccess, \Countable, \Iterator
 
 	public function __construct($model, $preload = 20)
 	{
+		global $wpdb;
+		$this->wpdb 		= $wpdb;
+
 		$this->model		= $model;
 		$this->preload 		= $preload;
 		$this->filter 		= new CollectionBuilder(Inflector::tableize(Inflector::denamespace($model))); 
@@ -109,5 +116,24 @@ class Collection implements \ArrayAccess, \Countable, \Iterator
 	public function valid()
 	{
 		# code...
+	}
+
+//=====================
+//   Private Methods
+//=====================
+
+	/**
+	 * Gets the next page of results
+	 * 
+	 * Populates $this->result_set with the next records from the database.
+	 */
+	private function nextPage()
+	{
+		if (!$this->has_more_records) {
+			throw new ResultOverflowException("No more records exist in the result set");
+		}
+
+		$this->current_page += 1;
+		$this->wpdb->doSomething(); //...
 	}
 }

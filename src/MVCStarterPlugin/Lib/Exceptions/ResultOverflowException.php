@@ -6,7 +6,7 @@
 
 namespace MVCStarterPlugin\Lib\Exceptions;
 
-class InvalidSQLException extends \Exception
+class ResultOverflowException extends \Exception
 {
 
 }
